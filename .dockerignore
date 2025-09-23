@@ -1,0 +1,36 @@
+# Development files
+.git
+.gitignore
+README.md
+*.md
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.venv
+.pytest_cache
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Scripts and docs
+rebuild.sh
