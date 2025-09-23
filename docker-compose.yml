@@ -1,0 +1,126 @@
+version: '3.9'
+services:
+  api:
+    build: .
+    container_name: task_api
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=tasks
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - RUN_MIGRATIONS=true
+      - DB_WAIT_SECONDS=60
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker_high:
+    build: .
+    container_name: task_worker_high
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=tasks
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - RUN_MIGRATIONS=false
+      - DB_WAIT_SECONDS=60
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.celery_app.app.celery_app worker -l info --queues high_priority -n worker_high@%h
+
+  worker_medium:
+    build: .
+    container_name: task_worker_medium
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=tasks
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - RUN_MIGRATIONS=false
+      - DB_WAIT_SECONDS=60
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.celery_app.app.celery_app worker -l info --queues medium_priority -n worker_medium@%h
+
+  worker_low:
+    build: .
+    container_name: task_worker_low
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=tasks
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - RUN_MIGRATIONS=false
+      - DB_WAIT_SECONDS=60
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.celery_app.app.celery_app worker -l info --queues low_priority -n worker_low@%h
+
+  beat:
+    build: .
+    container_name: task_beat
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=tasks
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - RUN_MIGRATIONS=false
+      - DB_WAIT_SECONDS=60
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.celery_app.app.celery_app beat -l info
+
+  db:
+    image: postgres:15-alpine
+    container_name: task_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tasks
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tasks"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    container_name: task_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  pgdata:
