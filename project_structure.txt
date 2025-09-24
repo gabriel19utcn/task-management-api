@@ -1,71 +1,55 @@
 .
-├── .dockerignore
-├── .env.example
 ├── Dockerfile
 ├── Makefile
 ├── README.md
 ├── alembic
-│   ├── env.py
-│   └── versions
-│       ├── 0001_init.py
-│       ├── 0002_add_minutely_recurrence.py
-│       ├── 0003_switch_to_integer_ids.py
-│       └── 0004_add_retry_count.py
+│   ├── env.py
+│   └── versions
+│       ├── 0001_init.py
+│       ├── 0002_add_minutely_recurrence.py
+│       ├── 0003_switch_to_integer_ids.py
+│       └── 0004_add_retry_count.py
 ├── alembic.ini
 ├── app
-│   ├── __init__.py
-│   ├── api
-│   │   ├── __init__.py
-│   │   └── v1
-│   │       ├── __init__.py
-│   │       ├── health.py
-│   │       ├── router.py
-│   │       └── tasks.py
-│   ├── celery_app
-│   │   ├── __init__.py
-│   │   ├── app.py
-│   │   └── tasks.py
-│   ├── core
-│   │   ├── __init__.py
-│   │   └── config.py
-│   ├── db
-│   │   ├── __init__.py
-│   │   └── session.py
-│   ├── main.py
-│   ├── models
-│   │   ├── __init__.py
-│   │   └── task.py
-│   ├── schemas
-│   │   ├── __init__.py
-│   │   └── task.py
-│   ├── services
-│   │   ├── __init__.py
-│   │   └── task_service.py
-│   └── utils
-│       └── logger.py
+│   ├── api
+│   │   └── v1
+│   │       ├── __init__.py
+│   │       ├── health.py
+│   │       ├── router.py
+│   │       └── tasks.py
+│   ├── celery_app
+│   │   ├── app.py
+│   │   └── tasks.py
+│   ├── core
+│   │   └── config.py
+│   ├── db
+│   │   └── session.py
+│   ├── main.py
+│   ├── models
+│   │   └── task.py
+│   ├── schemas
+│   │   └── task.py
+│   ├── services
+│   │   └── task_service.py
+│   └── utils
+│       └── logger.py
 ├── docker-compose.yml
 ├── docs
-│   └── API.md
+│   └── API.md
 ├── entrypoint.sh
-├── project_structure.txt
 ├── rebuild.sh
 ├── requirements-test.txt
 ├── requirements.txt
 ├── run_si_tests.sh
 ├── run_tests.sh
-├── test_priority_migration.sh
+├── task_priority_test.sh
 └── tests
     ├── si-tests
-    │   └── feature
-    │       ├── steps
-    │       │   └── task_steps.py
-    │       └── task_creation.feature
+    │   └── feature
+    │       ├── steps
+    │       │   └── task_steps.py
+    │       └── task_creation.feature
     └── unit-tests
-        ├── __init__.py
-        ├── __pycache__
-        │   ├── __init__.cpython-313.pyc
-        │   ├── test_api.cpython-313-pytest-8.2.0.pyc
-        │   └── test_api.cpython-313-pytest-8.4.2.pyc
         └── test_api.py
 
-19 directories, 49 files
+18 directories, 34 files
