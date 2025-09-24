@@ -114,6 +114,18 @@ Client ──POST /tasks──▶ API ──save──▶ Database
 - **Priority 3**: Low priority queue (10s delay)
 
 
+## Local Development
+
+For local development and testing, you can use a virtual environment
+
+```bash
+# Create and activate virtual environment
+python3 -m venv .venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
 ## Testing
 
 Run unit tests:
