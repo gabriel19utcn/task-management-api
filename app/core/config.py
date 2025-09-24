@@ -48,8 +48,11 @@ class Settings(BaseSettings):
 
     @property
     def celery_result_backend(self) -> str:
-        return f"redis://{self.redis_host}:\
-            {self.redis_port}/{self.celery_result_backend_db}"
+        return (
+            f"redis://{self.redis_host}:"
+            f"{self.redis_port}/"
+            f"{self.celery_result_backend_db}"
+        )
 
 
 @lru_cache()
