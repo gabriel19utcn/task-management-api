@@ -94,7 +94,7 @@ Client ──POST /tasks──▶ API ──save──▶ Database
                         ▼
                    Redis Queue ──▶ Worker ──update──▶ Database
                    (by priority)      │
-                                     ▼
+                                      ▼
                                Execute Task
                                (a + b = result)
 ```
