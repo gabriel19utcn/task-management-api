@@ -1,9 +1,9 @@
 import enum
-from typing import Optional
 from datetime import datetime, timezone
+from typing import Optional
 
-from sqlalchemy import Column, String, DateTime, Enum, Integer, Numeric, ForeignKey, JSON, Text
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
 
@@ -36,9 +36,13 @@ class RecurrenceRule(Base):
     __tablename__ = "recurrence_rules"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    interval_type: Mapped[RecurrenceInterval] = mapped_column(Enum(RecurrenceInterval), nullable=False)
+    interval_type: Mapped[RecurrenceInterval] = mapped_column(
+        Enum(RecurrenceInterval), nullable=False
+    )
     interval_value: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    next_run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    next_run_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     active: Mapped[bool] = mapped_column(default=True, nullable=False)
     base_payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     priority: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
@@ -50,9 +54,15 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    type: Mapped[TaskType] = mapped_column(Enum(TaskType), nullable=False, default=TaskType.single)
-    status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), nullable=False, default=TaskStatus.pending)
-    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=2, index=True)
+    type: Mapped[TaskType] = mapped_column(
+        Enum(TaskType), nullable=False, default=TaskType.single
+    )
+    status: Mapped[TaskStatus] = mapped_column(
+        Enum(TaskStatus), nullable=False, default=TaskStatus.pending
+    )
+    priority: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=2, index=True
+    )
 
     # Single task fields
     a: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -63,18 +73,32 @@ class Task(Base):
     pairs: Mapped[Optional[dict]] = mapped_column("pairs", JSON, nullable=True)
     results: Mapped[Optional[dict]] = mapped_column("results", JSON, nullable=True)
 
-    scheduled_for: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_for: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    started_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    finished_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
-    recurrence_rule_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("recurrence_rules.id"), nullable=True, index=True)
-    recurrence_rule: Mapped[Optional[RecurrenceRule]] = relationship("RecurrenceRule", back_populates="tasks")
+    recurrence_rule_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("recurrence_rules.id"), nullable=True, index=True
+    )
+    recurrence_rule: Mapped[Optional[RecurrenceRule]] = relationship(
+        "RecurrenceRule", back_populates="tasks"
+    )
 
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     def mark_running(self):
         self.status = TaskStatus.running

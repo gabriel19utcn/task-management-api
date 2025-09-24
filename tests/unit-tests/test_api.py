@@ -6,12 +6,10 @@ class TestHealthEndpoint:
 
     def test_health_endpoint_returns_healthy_status(self):
         """Test that health endpoint returns healthy status."""
+
         # Mock API response function
         def mock_health_check():
-            return {
-                "status": "healthy",
-                "timestamp": "2025-09-23T14:00:00Z"
-            }
+            return {"status": "healthy", "timestamp": "2025-09-23T14:00:00Z"}
 
         # Test the health endpoint logic
         result = mock_health_check()
@@ -26,6 +24,7 @@ class TestTaskEndpoint:
 
     def test_create_task_success(self):
         """Test successful task creation logic."""
+
         # Mock task creation function
         def mock_create_task(task_data):
             return {
@@ -35,7 +34,7 @@ class TestTaskEndpoint:
                 "a": task_data["a"],
                 "b": task_data["b"],
                 "priority": task_data.get("priority", 2),
-                "result": None
+                "result": None,
             }
 
         # Test task creation logic

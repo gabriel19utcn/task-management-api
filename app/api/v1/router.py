@@ -3,8 +3,9 @@ API v1 router that combines all v1 endpoints.
 """
 
 from fastapi import APIRouter
-from .tasks import router as tasks_router
+
 from .health import router as health_router
+from .tasks import router as tasks_router
 
 # Create the main v1 router
 v1_router = APIRouter(prefix="/api/v1")

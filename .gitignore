@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.manifest
+*.spec
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.env
+.env
+.venv/
+venv/
+ENV/
+env.bak/
+*.cover
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+
+# VS Code
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# Test and coverage reports
+coverage.xml
+*.coveragerc
+
+# Docker
+*.pid
+
+# Others
+*.swp
+*.swo
+
+# Ignore local settings
+local_settings.py

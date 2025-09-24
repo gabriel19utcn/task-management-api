@@ -1,10 +1,10 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
 
 from app.api.v1.router import v1_router  # Versioned API only
 from app.core.config import get_settings
 from app.utils.logger import logger
-
 
 settings = get_settings()
 
@@ -25,7 +25,7 @@ app = FastAPI(
     title=settings.app_name,
     description="Task Management API",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Include versioned API router
@@ -46,6 +46,6 @@ async def root():
         "endpoints": {
             "docs": "/docs",
             "tasks": "/api/v1/tasks",
-            "health": "/api/v1/health"
-        }
+            "health": "/api/v1/health",
+        },
     }

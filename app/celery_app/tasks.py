@@ -1,14 +1,23 @@
-from datetime import datetime, timezone, timedelta
 import time
+from datetime import datetime, timedelta, timezone
+
 from app.celery_app.app import celery_app
 from app.db.session import SessionLocal
-from app.models.task import Task, TaskStatus, TaskType, RecurrenceRule, RecurrenceInterval
+from app.models.task import (
+    RecurrenceInterval,
+    RecurrenceRule,
+    Task,
+    TaskStatus,
+    TaskType,
+)
 from app.services.task_service import TaskService
+
 
 # Basic logging to stdout
 def log(message: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{timestamp}] {message}")
+
 
 # Task configuration
 MAX_RETRIES = 3
@@ -17,36 +26,47 @@ MAX_RETRY_DELAY = 300
 
 # Queue delays for different priorities
 DELAYS = {
-    'high_priority': 0,
-    'medium_priority': 5,
-    'low_priority': 10,
+    "high_priority": 0,
+    "medium_priority": 5,
+    "low_priority": 10,
 }
 
 
 class TaskError(Exception):
     pass
 
-@celery_app.task(bind=True, acks_late=True, max_retries=MAX_RETRIES, queue='high_priority')
+
+@celery_app.task(
+    bind=True, acks_late=True, max_retries=MAX_RETRIES, queue="high_priority"
+)
 def execute_task_high_priority(self, task_id: str):
-    return _execute_task_with_delay(self, task_id, DELAYS['high_priority'])
+    return _execute_task_with_delay(self, task_id, DELAYS["high_priority"])
 
-@celery_app.task(bind=True, acks_late=True, max_retries=MAX_RETRIES, queue='medium_priority')
+
+@celery_app.task(
+    bind=True, acks_late=True, max_retries=MAX_RETRIES, queue="medium_priority"
+)
 def execute_task_medium_priority(self, task_id: str):
-    return _execute_task_with_delay(self, task_id, DELAYS['medium_priority'])
+    return _execute_task_with_delay(self, task_id, DELAYS["medium_priority"])
 
-@celery_app.task(bind=True, acks_late=True, max_retries=MAX_RETRIES, queue='low_priority')
+
+@celery_app.task(
+    bind=True, acks_late=True, max_retries=MAX_RETRIES, queue="low_priority"
+)
 def execute_task_low_priority(self, task_id: str):
-    return _execute_task_with_delay(self, task_id, DELAYS['low_priority'])
+    return _execute_task_with_delay(self, task_id, DELAYS["low_priority"])
 
 
 def _execute_task_with_delay(self, task_id: str, queue_delay: int):
     db = SessionLocal()
     task = None
     retry_count = self.request.retries
-    queue_name = self.request.delivery_info.get('routing_key', 'unknown')
+    queue_name = self.request.delivery_info.get("routing_key", "unknown")
 
     try:
-        log(f"Starting task {task_id} on {queue_name} queue (attempt {retry_count + 1})")
+        log(
+            f"Starting task {task_id} on {queue_name} queue (attempt {retry_count + 1})"
+        )
 
         if queue_delay > 0:
             log(f"Task {task_id} applying {queue_delay}s delay")
@@ -57,7 +77,11 @@ def _execute_task_with_delay(self, task_id: str, queue_delay: int):
             log(f"Task {task_id} not found")
             raise TaskError(f"Task {task_id} not found")
 
-        if task.status not in (TaskStatus.pending, TaskStatus.queued, TaskStatus.failed):
+        if task.status not in (
+            TaskStatus.pending,
+            TaskStatus.queued,
+            TaskStatus.failed,
+        ):
             log(f"Task {task_id} has invalid status: {task.status}")
             raise TaskError(f"Task {task_id} has invalid status: {task.status}")
 
@@ -91,10 +115,15 @@ def _execute_task_with_delay(self, task_id: str, queue_delay: int):
         return
 
     except Exception as e:
-        log(f"Task {task_id} failed on {queue_name} queue (attempt {retry_count + 1}): {e}")
+        log(
+            f"Task {task_id} failed on {queue_name} \
+                queue (attempt {retry_count + 1}): {e}"
+        )
 
         if task:
-            task.status = TaskStatus.failed if retry_count >= MAX_RETRIES else TaskStatus.queued
+            task.status = (
+                TaskStatus.failed if retry_count >= MAX_RETRIES else TaskStatus.queued
+            )
             task.error_message = str(e)
             if retry_count >= MAX_RETRIES:
                 task.finished_at = datetime.now(timezone.utc)
@@ -103,7 +132,7 @@ def _execute_task_with_delay(self, task_id: str, queue_delay: int):
 
         # Retry with backoff
         if retry_count < MAX_RETRIES:
-            retry_delay = min(RETRY_DELAY * (2 ** retry_count), MAX_RETRY_DELAY)
+            retry_delay = min(RETRY_DELAY * (2**retry_count), MAX_RETRY_DELAY)
             log(f"Task {task_id} will retry in {retry_delay} seconds")
             raise self.retry(countdown=retry_delay, exc=e)
         else:
@@ -140,15 +169,16 @@ def _execute_batch_task(task: Task):
     task.results = results
 
 
-@celery_app.task(bind=True, queue='medium_priority')
+@celery_app.task(bind=True, queue="medium_priority")
 def schedule_recurring_tasks(self):
     db = SessionLocal()
     try:
         now = datetime.now(timezone.utc)
-        rules = db.query(RecurrenceRule).filter(
-            RecurrenceRule.active == True,
-            RecurrenceRule.next_run_at <= now
-        ).all()
+        rules = (
+            db.query(RecurrenceRule)
+            .filter(RecurrenceRule.active.is_(True), RecurrenceRule.next_run_at <= now)
+            .all()
+        )
 
         for rule in rules:
             try:
@@ -157,15 +187,14 @@ def schedule_recurring_tasks(self):
                 payload["priority"] = rule.priority
 
                 if "pairs" in payload:
-                    task = service.create_batch_task(
-                        pairs=payload["pairs"],
-                        priority=payload.get("priority", 2)
+                    task = service.create_batch(
+                        pairs=payload["pairs"], priority=payload.get("priority", 2)
                     )
                 else:
-                    task = service.create_single_task(
+                    task = service.create_single(
                         a=payload.get("a", 0),
                         b=payload.get("b", 0),
-                        priority=payload.get("priority", 2)
+                        priority=payload.get("priority", 2),
                     )
 
                 log(f"Created recurring task {task.id} from rule {rule.id}")
@@ -206,7 +235,9 @@ def get_task_function_by_priority(priority: int):
 def enqueue_task(task: Task):
     now = datetime.now(timezone.utc)
     task_function = get_task_function_by_priority(task.priority)
-    queue_name = {1: 'high_priority', 2: 'medium_priority', 3: 'low_priority'}.get(task.priority, 'medium_priority')
+    queue_name = {1: "high_priority", 2: "medium_priority", 3: "low_priority"}.get(
+        task.priority, "medium_priority"
+    )
 
     if task.scheduled_for and task.scheduled_for > now:
         delta = (task.scheduled_for - now).total_seconds()
@@ -219,15 +250,22 @@ def enqueue_task(task: Task):
 
 def migrate_task_to_priority_queue(task: Task, old_priority: int, new_priority: int):
     if task.status not in (TaskStatus.pending, TaskStatus.queued):
-        log(f"Cannot migrate task {task.id} - status is {task.status}, not pending/queued")
+        log(
+            f"Cannot migrate task {task.id} - \
+                status is {task.status}, not pending/queued"
+        )
         return False
 
     if old_priority == new_priority:
         log(f"Task {task.id} priority unchanged ({old_priority}), no migration needed")
         return True
 
-    old_queue = {1: 'high_priority', 2: 'medium_priority', 3: 'low_priority'}.get(old_priority, 'medium_priority')
-    new_queue = {1: 'high_priority', 2: 'medium_priority', 3: 'low_priority'}.get(new_priority, 'medium_priority')
+    old_queue = {1: "high_priority", 2: "medium_priority", 3: "low_priority"}.get(
+        old_priority, "medium_priority"
+    )
+    new_queue = {1: "high_priority", 2: "medium_priority", 3: "low_priority"}.get(
+        new_priority, "medium_priority"
+    )
 
     log(f"Migrating task {task.id} from {old_queue} queue to {new_queue} queue")
 
@@ -235,9 +273,11 @@ def migrate_task_to_priority_queue(task: Task, old_priority: int, new_priority: 
         task_id_str = str(task.id)
 
         # Try to revoke from all queues
-        for queue_name in ['high_priority', 'medium_priority', 'low_priority']:
+        for queue_name in ["high_priority", "medium_priority", "low_priority"]:
             try:
-                celery_app.control.revoke(task_id_str, terminate=False, signal='SIGUSR1')
+                celery_app.control.revoke(
+                    task_id_str, terminate=False, signal="SIGUSR1"
+                )
             except Exception:
                 pass  # Continue if revoke fails
 
@@ -251,4 +291,6 @@ def migrate_task_to_priority_queue(task: Task, old_priority: int, new_priority: 
 
 
 def get_queue_name_by_priority(priority: int) -> str:
-    return {1: 'high_priority', 2: 'medium_priority', 3: 'low_priority'}.get(priority, 'medium_priority')
+    return {1: "high_priority", 2: "medium_priority", 3: "low_priority"}.get(
+        priority, "medium_priority"
+    )

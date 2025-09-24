@@ -1,4 +1,5 @@
 from celery import Celery
+
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -7,7 +8,7 @@ celery_app = Celery(
     "task_scheduler",
     broker=settings.redis_url,
     backend=settings.celery_result_backend,
-    include=['app.celery_app.tasks']
+    include=["app.celery_app.tasks"],
 )
 
 celery_app.conf.update(
@@ -19,10 +20,12 @@ celery_app.conf.update(
     enable_utc=True,
     # Define priority queues
     task_routes={
-        'app.celery_app.tasks.execute_task_high_priority': {'queue': 'high_priority'},
-        'app.celery_app.tasks.execute_task_medium_priority': {'queue': 'medium_priority'},
-        'app.celery_app.tasks.execute_task_low_priority': {'queue': 'low_priority'},
-        'app.celery_app.tasks.schedule_recurring_tasks': {'queue': 'medium_priority'},
+        "app.celery_app.tasks.execute_task_high_priority": {"queue": "high_priority"},
+        "app.celery_app.tasks.execute_task_medium_priority": {
+            "queue": "medium_priority"
+        },
+        "app.celery_app.tasks.execute_task_low_priority": {"queue": "low_priority"},
+        "app.celery_app.tasks.schedule_recurring_tasks": {"queue": "medium_priority"},
     },
     beat_schedule={
         "scan-recurrences": {

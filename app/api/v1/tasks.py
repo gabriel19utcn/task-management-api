@@ -1,18 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.schemas.task import (
-    TaskCreateSingle,
-    TaskCreateBatch,
-    TaskRead,
-    TaskList,
-    TaskUpdate,
-    RetryResponse,
-)
-from app.models.task import TaskStatus, TaskType
-from app.services.task_service import TaskService
 from app.celery_app.tasks import enqueue_task
+from app.db.session import get_db
+from app.models.task import TaskStatus, TaskType
+from app.schemas.task import (
+    RetryResponse,
+    TaskCreateBatch,
+    TaskCreateSingle,
+    TaskList,
+    TaskRead,
+    TaskUpdate,
+)
+from app.services.task_service import TaskService
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -58,7 +58,9 @@ def list_tasks(
     db: Session = Depends(get_db),
 ):
     service = TaskService(db)
-    items, total = service.list_tasks(status=status, type_=type, limit=limit, offset=offset)
+    items, total = service.list_tasks(
+        status=status, type_=type, limit=limit, offset=offset
+    )
     return {"items": items, "total": total}
 
 

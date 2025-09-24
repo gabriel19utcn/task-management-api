@@ -1,24 +1,27 @@
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
 import os
 import sys
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 # Add app to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.db.session import Base  # noqa: E402
-from app.models.task import Task, RecurrenceRule  # noqa: E402
 from app.core.config import get_settings  # noqa: E402
+from app.db.session import Base  # noqa: E402
+from app.models.task import RecurrenceRule, Task  # noqa: E402
 
 settings = get_settings()
 config = context.config
-config.set_main_option('sqlalchemy.url', settings.database_url)
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+
 
 def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")

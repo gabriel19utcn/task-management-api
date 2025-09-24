@@ -1,5 +1,6 @@
-from fastapi import APIRouter
 from datetime import datetime, timezone
+
+from fastapi import APIRouter
 
 from app.schemas.task import HealthResponse
 

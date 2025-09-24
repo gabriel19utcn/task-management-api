@@ -8,7 +8,6 @@ si-test:
 
 lint:
 	flake8 app/ tests/ --max-line-length=88
-	pylint app/ || true
 
 format:
 	@echo "Formatting code..."

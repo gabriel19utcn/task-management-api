@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -22,7 +23,9 @@ class Settings(BaseSettings):
     celery_task_default_queue: str = "tasks"
 
     # Scheduling
-    recurrence_scan_interval_seconds: int = 10  # Reduced to 10 seconds for better demo responsiveness
+    recurrence_scan_interval_seconds: int = (
+        10  # Reduced to 10 seconds for better demo responsiveness
+    )
 
     # Logging and Monitoring
     log_level: str = "INFO"
@@ -45,7 +48,8 @@ class Settings(BaseSettings):
 
     @property
     def celery_result_backend(self) -> str:
-        return f"redis://{self.redis_host}:{self.redis_port}/{self.celery_result_backend_db}"
+        return f"redis://{self.redis_host}:\
+            {self.redis_port}/{self.celery_result_backend_db}"
 
 
 @lru_cache()

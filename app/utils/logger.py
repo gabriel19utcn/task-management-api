@@ -1,6 +1,6 @@
 import logging
-import sys
 import os
+import sys
 
 # Get log level from environment or default to INFO
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

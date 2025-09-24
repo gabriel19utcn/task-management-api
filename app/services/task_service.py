@@ -1,36 +1,82 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import select, func
 
-from app.models.task import Task, TaskStatus, TaskType, RecurrenceRule, RecurrenceInterval
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from app.models.task import (
+    RecurrenceInterval,
+    RecurrenceRule,
+    Task,
+    TaskStatus,
+    TaskType,
+)
 
 
 class TaskService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_single(self, a: int, b: int, priority: int, scheduled_for: Optional[datetime], recurring: Optional[dict]) -> Task:
-        task = Task(type=TaskType.single, a=a, b=b, priority=priority, scheduled_for=scheduled_for)
+    def create_single(
+        self,
+        a: int,
+        b: int,
+        priority: int,
+        scheduled_for: Optional[datetime],
+        recurring: Optional[dict],
+    ) -> Task:
+        task = Task(
+            type=TaskType.single,
+            a=a,
+            b=b,
+            priority=priority,
+            scheduled_for=scheduled_for,
+        )
         if recurring:
-            recurrence_rule = self._create_recurrence_rule(recurring, base_payload={"a": a, "b": b, "type": "single"}, priority=priority)
+            recurrence_rule = self._create_recurrence_rule(
+                recurring,
+                base_payload={"a": a, "b": b, "type": "single"},
+                priority=priority,
+            )
             task.recurrence_rule = recurrence_rule
         self.db.add(task)
         self.db.commit()
         self.db.refresh(task)
         return task
 
-    def create_batch(self, pairs: list[dict], priority: int, scheduled_for: Optional[datetime], recurring: Optional[dict]) -> Task:
-        task = Task(type=TaskType.batch, pairs=pairs, priority=priority, scheduled_for=scheduled_for)
+    def create_batch(
+        self,
+        pairs: list[dict],
+        priority: int,
+        scheduled_for: Optional[datetime],
+        recurring: Optional[dict],
+    ) -> Task:
+        task = Task(
+            type=TaskType.batch,
+            pairs=pairs,
+            priority=priority,
+            scheduled_for=scheduled_for,
+        )
         if recurring:
-            recurrence_rule = self._create_recurrence_rule(recurring, base_payload={"pairs": pairs, "type": "batch"}, priority=priority)
+            recurrence_rule = self._create_recurrence_rule(
+                recurring,
+                base_payload={"pairs": pairs, "type": "batch"},
+                priority=priority,
+            )
             task.recurrence_rule = recurrence_rule
         self.db.add(task)
         self.db.commit()
         self.db.refresh(task)
         return task
 
-    def list_tasks(self, *, status: list[TaskStatus], type_: TaskType, limit: int = 50, offset: int = 0) -> tuple[list[Task], int]:
+    def list_tasks(
+        self,
+        *,
+        status: list[TaskStatus],
+        type_: TaskType,
+        limit: int = 50,
+        offset: int = 0
+    ) -> tuple[list[Task], int]:
         stmt = select(Task)
         if status:
             stmt = stmt.where(Task.status.in_(status))
@@ -44,7 +90,13 @@ class TaskService:
             count_stmt = count_stmt.where(Task.type == type_)
 
         total = self.db.execute(count_stmt).scalar_one()
-        items = self.db.execute(stmt.order_by(Task.created_at.desc()).limit(limit).offset(offset)).scalars().all()
+        items = (
+            self.db.execute(
+                stmt.order_by(Task.created_at.desc()).limit(limit).offset(offset)
+            )
+            .scalars()
+            .all()
+        )
         return items, total
 
     def get(self, task_id: int) -> Optional[Task]:
@@ -80,7 +132,9 @@ class TaskService:
         self.db.refresh(task)
         return task
 
-    def _create_recurrence_rule(self, recurring: dict, base_payload: dict, priority: int) -> RecurrenceRule:
+    def _create_recurrence_rule(
+        self, recurring: dict, base_payload: dict, priority: int
+    ) -> RecurrenceRule:
         interval_type = RecurrenceInterval(recurring["interval_type"])
         interval_value = recurring["interval_value"]
         next_run_at = datetime.now(timezone.utc)
@@ -96,7 +150,9 @@ class TaskService:
         return rule
 
     def due_recurrences(self, now: datetime) -> list[RecurrenceRule]:
-        stmt = select(RecurrenceRule).where(RecurrenceRule.active == True, RecurrenceRule.next_run_at <= now)
+        stmt = select(RecurrenceRule).where(
+            RecurrenceRule.active.is_(True), RecurrenceRule.next_run_at <= now
+        )
         return self.db.execute(stmt).scalars().all()
 
     def advance_recurrence(self, rule: RecurrenceRule):
