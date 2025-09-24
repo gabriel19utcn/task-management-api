@@ -15,10 +15,12 @@ SessionLocal = sessionmaker(
 
 
 class Base(DeclarativeBase):
+    """Base class for all SQLAlchemy models."""
     pass
 
 
 def get_db():
+    """Database session dependency for FastAPI endpoints."""
     db = SessionLocal()
     try:
         yield db

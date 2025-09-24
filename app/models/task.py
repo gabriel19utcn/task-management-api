@@ -9,6 +9,7 @@ from app.db.session import Base
 
 
 def utc_now():
+    """Get current UTC datetime."""
     return datetime.now(timezone.utc)
 
 
@@ -33,6 +34,7 @@ class RecurrenceInterval(str, enum.Enum):
 
 
 class RecurrenceRule(Base):
+    """Database model for task recurrence scheduling rules."""
     __tablename__ = "recurrence_rules"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -51,6 +53,7 @@ class RecurrenceRule(Base):
 
 
 class Task(Base):
+    """Database model for tasks that perform addition operations."""
     __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -101,14 +104,17 @@ class Task(Base):
     )
 
     def mark_running(self):
+        """Mark task as currently running and set start time."""
         self.status = TaskStatus.running
         self.started_at = utc_now()
 
     def mark_success(self):
+        """Mark task as successfully completed and set finish time."""
         self.status = TaskStatus.success
         self.finished_at = utc_now()
 
     def mark_failed(self, error: str):
+        """Mark task as failed with error message and set finish time."""
         self.status = TaskStatus.failed
         self.error_message = error
         self.finished_at = utc_now()

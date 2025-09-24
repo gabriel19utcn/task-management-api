@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from app.api.v1.router import v1_router  # Versioned API only
 from app.core.config import get_settings
+from app.exceptions import InvalidTaskStatusError, TaskNotFoundError, TaskError
 from app.utils.logger import logger
 
 settings = get_settings()
@@ -28,13 +30,42 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+# Exception handlers
+@app.exception_handler(TaskNotFoundError)
+async def task_not_found_handler(request: Request, exc: TaskNotFoundError):
+    """Handle task not found exceptions."""
+    return JSONResponse(
+        status_code=404,
+        content={"detail": exc.message, "task_id": exc.task_id}
+    )
+
+
+@app.exception_handler(InvalidTaskStatusError)
+async def invalid_task_status_handler(request: Request, exc: InvalidTaskStatusError):
+    """Handle invalid task status exceptions."""
+    return JSONResponse(
+        status_code=400,
+        content={"detail": exc.message, "task_id": exc.task_id}
+    )
+
+
+@app.exception_handler(TaskError)
+async def task_error_handler(request: Request, exc: TaskError):
+    """Handle general task exceptions."""
+    return JSONResponse(
+        status_code=400,
+        content={"detail": exc.message, "task_id": exc.task_id}
+    )
+
+
 # Include versioned API router
 app.include_router(v1_router)
 
 
 @app.get("/")
 async def root():
-    """Root endpoint with basic application information."""
+    """Get API information and available endpoints."""
     logger.debug("Root endpoint accessed")
 
     return {

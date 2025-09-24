@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """Application configuration settings loaded from environment variables."""
     app_name: str = "task-scheduler"
     environment: str = "dev"
 
@@ -37,6 +38,7 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
+        """Construct PostgreSQL database URL from settings."""
         return (
             f"postgresql+psycopg2://{self.postgres_user}:{self.postgres_password}@"
             f"{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
@@ -44,10 +46,12 @@ class Settings(BaseSettings):
 
     @property
     def redis_url(self) -> str:
+        """Construct Redis URL for broker from settings."""
         return f"redis://{self.redis_host}:{self.redis_port}/0"
 
     @property
     def celery_result_backend(self) -> str:
+        """Construct Redis URL for Celery result backend from settings."""
         return (
             f"redis://{self.redis_host}:"
             f"{self.redis_port}/"
@@ -57,4 +61,5 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
+    """Get cached application settings instance."""
     return Settings()

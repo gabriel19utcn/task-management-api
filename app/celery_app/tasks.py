@@ -15,6 +15,7 @@ from app.services.task_service import TaskService
 
 # Basic logging to stdout
 def log(message: str):
+    """Log message with timestamp to stdout."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{timestamp}] {message}")
 
@@ -40,6 +41,7 @@ class TaskError(Exception):
     bind=True, acks_late=True, max_retries=MAX_RETRIES, queue="high_priority"
 )
 def execute_task_high_priority(self, task_id: str):
+    """Execute task on high priority queue with no delay."""
     return _execute_task_with_delay(self, task_id, DELAYS["high_priority"])
 
 
@@ -47,6 +49,7 @@ def execute_task_high_priority(self, task_id: str):
     bind=True, acks_late=True, max_retries=MAX_RETRIES, queue="medium_priority"
 )
 def execute_task_medium_priority(self, task_id: str):
+    """Execute task on medium priority queue with 5s delay."""
     return _execute_task_with_delay(self, task_id, DELAYS["medium_priority"])
 
 
@@ -54,10 +57,12 @@ def execute_task_medium_priority(self, task_id: str):
     bind=True, acks_late=True, max_retries=MAX_RETRIES, queue="low_priority"
 )
 def execute_task_low_priority(self, task_id: str):
+    """Execute task on low priority queue with 10s delay."""
     return _execute_task_with_delay(self, task_id, DELAYS["low_priority"])
 
 
 def _execute_task_with_delay(self, task_id: str, queue_delay: int):
+    """Execute task with specified queue delay and retry logic."""
     db = SessionLocal()
     task = None
     retry_count = self.request.retries
@@ -143,6 +148,7 @@ def _execute_task_with_delay(self, task_id: str, queue_delay: int):
 
 
 def _execute_single_task(task: Task):
+    """Execute single addition task and store result."""
     if task.a is None or task.b is None:
         raise ValueError("Task missing operands")
 
@@ -154,6 +160,7 @@ def _execute_single_task(task: Task):
 
 
 def _execute_batch_task(task: Task):
+    """Execute batch addition task for multiple pairs of numbers."""
     pairs = task.pairs or []
 
     # Test failure case
@@ -171,6 +178,7 @@ def _execute_batch_task(task: Task):
 
 @celery_app.task(bind=True, queue="medium_priority")
 def schedule_recurring_tasks(self):
+    """Check for due recurring tasks and create new task instances."""
     db = SessionLocal()
     try:
         now = datetime.now(timezone.utc)
@@ -221,6 +229,7 @@ def schedule_recurring_tasks(self):
 
 
 def get_task_function_by_priority(priority: int):
+    """Get appropriate task executor function based on priority level."""
     if priority == 1:
         return execute_task_high_priority
     elif priority == 2:
@@ -233,6 +242,7 @@ def get_task_function_by_priority(priority: int):
 
 
 def enqueue_task(task: Task):
+    """Queue task for execution, handling immediate or scheduled execution."""
     now = datetime.now(timezone.utc)
     task_function = get_task_function_by_priority(task.priority)
     queue_name = {1: "high_priority", 2: "medium_priority", 3: "low_priority"}.get(
@@ -249,6 +259,7 @@ def enqueue_task(task: Task):
 
 
 def migrate_task_to_priority_queue(task: Task, old_priority: int, new_priority: int):
+    """Move task between priority queues when priority changes."""
     if task.status not in (TaskStatus.pending, TaskStatus.queued):
         log(
             f"Cannot migrate task {task.id} - \
@@ -291,6 +302,7 @@ def migrate_task_to_priority_queue(task: Task, old_priority: int, new_priority: 
 
 
 def get_queue_name_by_priority(priority: int) -> str:
+    """Get queue name string for given priority level."""
     return {1: "high_priority", 2: "medium_priority", 3: "low_priority"}.get(
         priority, "medium_priority"
     )

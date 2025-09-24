@@ -22,5 +22,5 @@ logger.propagate = False
 
 
 def get_logger(name: str = None) -> logging.Logger:
-    """Get the basic logger."""
+    """Get configured logger instance for application logging."""
     return logger

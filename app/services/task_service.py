@@ -14,6 +14,8 @@ from app.models.task import (
 
 
 class TaskService:
+    """Service class for task management operations."""
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -25,6 +27,7 @@ class TaskService:
         scheduled_for: Optional[datetime],
         recurring: Optional[dict],
     ) -> Task:
+        """Create a single addition task with optional scheduling and recurrence."""
         task = Task(
             type=TaskType.single,
             a=a,
@@ -51,6 +54,7 @@ class TaskService:
         scheduled_for: Optional[datetime],
         recurring: Optional[dict],
     ) -> Task:
+        """Create a batch addition task with multiple pairs of numbers."""
         task = Task(
             type=TaskType.batch,
             pairs=pairs,
@@ -77,6 +81,7 @@ class TaskService:
         limit: int = 50,
         offset: int = 0
     ) -> tuple[list[Task], int]:
+        """Get paginated tasks filtered by status and type with total count."""
         stmt = select(Task)
         if status:
             stmt = stmt.where(Task.status.in_(status))
@@ -100,9 +105,11 @@ class TaskService:
         return items, total
 
     def get(self, task_id: int) -> Optional[Task]:
+        """Get a task by its ID."""
         return self.db.get(Task, task_id)
 
     def update_priority(self, task: Task, new_priority: int) -> Task:
+        """Update task priority and migrate between queue priorities."""
         old_priority = task.priority
         task.priority = new_priority
         self.db.commit()
@@ -116,10 +123,12 @@ class TaskService:
         return task
 
     def delete(self, task: Task):
+        """Delete a task from the database."""
         self.db.delete(task)
         self.db.commit()
 
     def retry(self, task: Task) -> Task:
+        """Reset task status and clear execution data for retry."""
         task.status = TaskStatus.pending
         task.started_at = None
         task.finished_at = None
@@ -135,6 +144,7 @@ class TaskService:
     def _create_recurrence_rule(
         self, recurring: dict, base_payload: dict, priority: int
     ) -> RecurrenceRule:
+        """Create a recurrence rule for periodic task execution."""
         interval_type = RecurrenceInterval(recurring["interval_type"])
         interval_value = recurring["interval_value"]
         next_run_at = datetime.now(timezone.utc)
@@ -150,12 +160,14 @@ class TaskService:
         return rule
 
     def due_recurrences(self, now: datetime) -> list[RecurrenceRule]:
+        """Get all active recurrence rules that are due for execution."""
         stmt = select(RecurrenceRule).where(
             RecurrenceRule.active.is_(True), RecurrenceRule.next_run_at <= now
         )
         return self.db.execute(stmt).scalars().all()
 
     def advance_recurrence(self, rule: RecurrenceRule):
+        """Advance recurrence rule to next execution time or deactivate if needed."""
         if rule.interval_value == 0:
             rule.active = False
             self.db.commit()
