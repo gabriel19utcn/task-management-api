@@ -35,6 +35,7 @@ class RecurrenceInterval(str, enum.Enum):
 
 class RecurrenceRule(Base):
     """Database model for task recurrence scheduling rules."""
+
     __tablename__ = "recurrence_rules"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -54,6 +55,7 @@ class RecurrenceRule(Base):
 
 class Task(Base):
     """Database model for tasks that perform addition operations."""
+
     __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

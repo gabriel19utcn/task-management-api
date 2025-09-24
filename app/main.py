@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.api.v1.router import v1_router  # Versioned API only
 from app.core.config import get_settings
-from app.exceptions import InvalidTaskStatusError, TaskNotFoundError, TaskError
+from app.exceptions import InvalidTaskStatusError, TaskError, TaskNotFoundError
 from app.utils.logger import logger
 
 settings = get_settings()
@@ -36,8 +36,7 @@ app = FastAPI(
 async def task_not_found_handler(request: Request, exc: TaskNotFoundError):
     """Handle task not found exceptions."""
     return JSONResponse(
-        status_code=404,
-        content={"detail": exc.message, "task_id": exc.task_id}
+        status_code=404, content={"detail": exc.message, "task_id": exc.task_id}
     )
 
 
@@ -45,8 +44,7 @@ async def task_not_found_handler(request: Request, exc: TaskNotFoundError):
 async def invalid_task_status_handler(request: Request, exc: InvalidTaskStatusError):
     """Handle invalid task status exceptions."""
     return JSONResponse(
-        status_code=400,
-        content={"detail": exc.message, "task_id": exc.task_id}
+        status_code=400, content={"detail": exc.message, "task_id": exc.task_id}
     )
 
 
@@ -54,8 +52,7 @@ async def invalid_task_status_handler(request: Request, exc: InvalidTaskStatusEr
 async def task_error_handler(request: Request, exc: TaskError):
     """Handle general task exceptions."""
     return JSONResponse(
-        status_code=400,
-        content={"detail": exc.message, "task_id": exc.task_id}
+        status_code=400, content={"detail": exc.message, "task_id": exc.task_id}
     )
 
 

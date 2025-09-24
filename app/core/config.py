@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """Application configuration settings loaded from environment variables."""
+
     app_name: str = "task-scheduler"
     environment: str = "dev"
 
